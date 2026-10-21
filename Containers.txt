@@ -1,0 +1,39 @@
+Container is a advancement of Virtual machine
+
+Virtualation (hypervisor)
+Used to create many logical seperated virtual server on top of one Single physical server
+
+Each VM on top of physical server is operated seperatly
+
+But here let say physical is 100gb ram we sepreated 4vm with 25 gb ram 
+
+Here each VM is not utiliting the full 25 gb ram it is using less than half or below
+
+Here it is the problem. 
+
+
+
+How Container is deployeled ARCH:
+
+Containers is deployed over a physical server or VM(ec2)
+
+physical----docker>>container --model1
+
+physical--hypervisor-->Ec2-->docker-->c1 -- model2
+
+Docker is lightweight as it can have all package in small size of space
+and it is not fully supported OS have system dep and lib from Base host OS(vm or physical)
+
+
+Docker Lifecyle:
+
+We will create a Docker file----->From that create a Image--->from that we will create a Container
+
+These are done by passing commands on DOcker engine.
+
+Docker engine:
+Docker engine is the SPOC for all container running over the machine
+
+so it is Single point of failure coz is engine down all container will be down
+
+to avoid this layers came byt layer consume high space so that BUILDHA came
