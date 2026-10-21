@@ -1,0 +1,56 @@
+DOCKER:
+
+Docker is a containerization platform that provides easy way to containerize your applications, which means, using Docker you can build container images, run the images to create containers and also push these containers to container regestries such as DockerHub, Quay.io and so on.
+
+Docker Lifecyle:
+
+We will create a Docker file----->From that create a Image--->from that we will create a Container
+
+These are done by passing commands on DOcker engine.
+docker build -> builds docker images from Dockerfile
+docker run -> runs container from docker images
+docker push -> push the container image to public/private regestries to share the docker images.
+
+Dockerfile
+Dockerfile is a file where you provide the steps to build your Docker Image.
+
+Images
+An image is a read-only template with instructions for creating a Docker container. Often, an image is based on another image, with some additional customization. For example, you may build an image which is based on the ubuntu image, but installs the Apache web server and your application, as well as the configuration details needed to make your application run.
+
+Docker engine:
+Docker engine is the SPOC for all container running over the machine
+
+so it is Single point of failure coz is engine down all container will be down
+
+to avoid this layers came byt layer consume high space so that BUILDHA came
+
+
+
+Files and Folders in containers base images
+    /bin: contains binary executable files, such as the ls, cp, and ps commands.
+
+    /sbin: contains system binary executable files, such as the init and shutdown commands.
+
+    /etc: contains configuration files for various system services.
+
+    /lib: contains library files that are used by the binary executables.
+
+    /usr: contains user-related files and utilities, such as applications, libraries, and documentation.
+
+    /var: contains variable data, such as log files, spool files, and temporary files.
+
+    /root: is the home directory of the root user.
+
+Files and Folders that containers use from host operating system
+    The host's file system: Docker containers can access the host file system using bind mounts, which allow the container to read and write files in the host file system.
+
+    Networking stack: The host's networking stack is used to provide network connectivity to the container. Docker containers can be connected to the host's network directly or through a virtual network.
+
+    System calls: The host's kernel handles system calls from the container, which is how the container accesses the host's resources, such as CPU, memory, and I/O.
+
+    Namespaces: Docker containers use Linux namespaces to create isolated environments for the container's processes. Namespaces provide isolation for resources such as the file system, process ID, and network.
+
+    Control groups (cgroups): Docker containers use cgroups to limit and control the amount of resources, such as CPU, memory, and I/O, that a container can access.
+    
+
+It's important to note that while a container uses resources from the host operating system, it is still isolated from the host and other containers, so changes to the container do not affect the host or other containers
