@@ -1,0 +1,7 @@
+--> yum install docker.io
+
+Normally docker expects root/sudo user to run
+
+so add the user to docker group and run the docker command with that user.
+
+

@@ -1,0 +1,79 @@
+Docker containers
+=================
+
+A container is a running instance of an image. `docker run` creates a
+container and starts it. If the image is not available locally, Docker
+downloads it from the registry.
+
+Run an image interactively:
+
+docker run -it --name my-container dockerhubname/imagename:tag
+
+Run a web application in the background and publish its port:
+
+docker run -d --name django-app -p 8000:8000 praneshdoc07/django-app:v1
+
+Option	Meaning
+docker run	Creates and starts a container from an image.
+-i	Keeps standard input open.
+-t	Allocates a terminal (TTY), commonly used with -i for interactive shells.
+-d	Runs the container in the background.
+--name	Gives the container a memorable name.
+-p HOST_PORT:CONTAINER_PORT	Forwards a host port to a port in the container.
+
+In `-p 8000:8000`, the first port is on the host and the second port is in
+the container. Open `http://localhost:8000` to reach the application.
+
+Container lifecycle and inspection
+----------------------------------
+
+docker ps
+Lists running containers.
+
+docker ps -a
+Lists all containers, including stopped ones.
+
+docker stop django-app
+Gracefully stops a running container.
+
+docker start django-app
+Starts an existing stopped container. It does not create a new one.
+
+docker restart django-app
+Restarts an existing container.
+
+docker logs django-app
+Shows the container's output. Add `-f` to keep following new output:
+`docker logs -f django-app`.
+
+docker exec -it django-app sh
+Opens an interactive shell in a running container. Use `bash` instead of
+`sh` if the image includes Bash.
+
+docker inspect django-app
+Displays detailed configuration and state information for the container.
+
+docker rm django-app
+Removes a stopped container. Stop it first if it is still running, or use
+`docker rm -f django-app` to force-remove it.
+
+Publishing an image to Docker Hub
+---------------------------------
+
+Log in to Docker Hub. Docker prompts for credentials; use a personal access
+token when your account requires one:
+
+docker login --username your-dockerhub-username
+
+The image must be tagged with your Docker Hub username and repository name.
+For example, tag a locally built image:
+
+docker tag local-image:latest your-dockerhub-username/imagename:tag
+
+Upload the tagged image:
+
+docker push your-dockerhub-username/imagename:tag
+
+`docker push` uploads an image, not a running container. For example:
+
+docker push praneshdoc07/django-app:v1

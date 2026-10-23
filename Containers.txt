@@ -1,5 +1,7 @@
 Container is a advancement of Virtual machine
 
+A container is a standard unit of software that packages up code and all its dependencies so the application runs quickly and reliably from one computing environment to another. A Docker container image is a lightweight, standalone, executable package of software that includes everything needed to run an application: code, runtime, system tools, system libraries and settings.
+
 Virtualation (hypervisor)
 Used to create many logical seperated virtual server on top of one Single physical server
 
@@ -21,19 +23,6 @@ physical----docker>>container --model1
 
 physical--hypervisor-->Ec2-->docker-->c1 -- model2
 
-Docker is lightweight as it can have all package in small size of space
+Container is lightweight as it can have all package in small size of space
 and it is not fully supported OS have system dep and lib from Base host OS(vm or physical)
 
-
-Docker Lifecyle:
-
-We will create a Docker file----->From that create a Image--->from that we will create a Container
-
-These are done by passing commands on DOcker engine.
-
-Docker engine:
-Docker engine is the SPOC for all container running over the machine
-
-so it is Single point of failure coz is engine down all container will be down
-
-to avoid this layers came byt layer consume high space so that BUILDHA came

@@ -1,0 +1,250 @@
+#lets create a containerization of a Django application
+
+#djong is a software that server application
+
+#dependencies for django is instal python and install django
+
+#once done as we create role in ansile-galaxy
+
+#we use django cmnd lik django-admin startproject projectname
+
+#this will create a structure of files with py extension
+
+#this has all configuration taht are required
+
+#now to run a application we need again create a structure
+
+#python3 manage.py startapp appname
+
+#this will agin create a folder where app can be deployed in django
+
+#create a source code and put it here and modify the django configuration to run this src code
+
+#views.py--> def index(request):
+return render(request, 'demo.html')+
+
+
+#so why contanier does here before it was hecti for dependenciesnniw we can container it with dependencies and all the other can pull the image and run the app without dependencies issue
+
+
+Now we will get the app folder by django with requirementtxt from developer we write a docker file and bulid image and run in contanier
+
+
+STEPS TO CREATRE DJANGO AND ADD APP INTO IT:
+
+INstall DJANGO: pip install django
+
+Create a project : django-admin startproject projectname
+cd projectname
+create a appname: python3 manage.py startapp appname
+
+once its done you will have the structure as said
+
+Now import the appcode into the applicatio folder cretead into a template folder that would be created.
+
+#now Create a Django view
+Open the app's views.py:
+nano views.py
+
+
+Add:
+from django.shortcuts import renderdef home(request):    return render(request, "index.html")
+
+
+#Step 3: Configure the app URL
+Create or edit demo/urls.py:
+nano demo/urls.py
+
+
+Add:
+from django.urls import path
+from . import views
+urlpatterns = [ 
+       path("", views.home, name="home"),
+]
+
+
+#Connect the app to the project
+Open your project's URL configuration:
+nano myapp/urls.py
+
+from django.contrib import admin
+from django.urls import include, path
+
+urlpatterns = [
+    path('demo/', include('demo.urls')),
+    path('admin/', admin.site.urls),
+]
+
+#Register the Django app
+Open myapp/settings.py
+add import os on top
+ and in template field add
+
+ ALLOWED_HOSTS = ['*']
+
+ TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'demo/templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+
+now to run app
+
+Important: .venv must already exist. If it doesn't, create it first:
+python3 -m venv .venv
+
+
+Start Django
+Activate your virtual environment if you created one:
+cd ~/docker/myapp
+source .venv/bin/activate
+python3 manage.py runserver 0.0.0.0:8000
+
+This command activates your Python virtual environment.
+source .venv/bin/activate
+
+
+What each part means:
+Part	Meaning
+source	Runs a script in your current shell so its environment changes apply to that shell.
+.venv/	The directory containing your Python virtual environment.
+bin/activate	The script that activates the environment.
+
+
+
+This command starts your Django application.
+python manage.py runserver 0.0.0.0:8000
+
+
+Let's break it down:
+Part	Meaning
+python	Runs Python from the active environment.
+manage.py	Django's project management script.
+runserver	Starts Django's built-in development web server.
+0.0.0.0	Makes the server listen on all available IPv4 network interfaces.
+8000	The TCP port on which Django listens.
+
+
+------req.txt :: includes Django and Tzdata--------------
+
+NOW WITH CONTAINER WE AE GOING TO CONTAINER THIS process and run it in container not in VM
+
+Dokcer file:
+#base OS
+FROM ubuntu:latest
+# working dir where djong  folder will place
+WORKDIR /app
+
+#copy the django project and requiremnt file that need to run the django
+COPY myapp /app/
+COPY requirements.txt /app/
+
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip python3-venv && \
+    
+RUN python3 -m venv venv1 && \
+    source venv1/bin/activate && \    
+    pip install -r /app/requirements.txt
+#cd myapp
+SHELL ["/bin/bash", "-c"]
+
+#SHELL ["/bin/bash", "-c"]
+
+
+#tells Docker to use Bash as the shell for subsequent shell-form RUN, CMD, and ENTRYPOINT instructions instead of the default shell.
+
+#Let's understand it with your Django Dockerfile.
+#1. Default shell vs Bash
+#By default, Linux Docker images typically execute shell-form instructions using:
+#/bin/sh -c
+
+
+#When you add:
+#SHELL ["/bin/bash", "-c"]
+
+
+#Docker uses:
+#/bin/bash -c "your command"
+
+
+#The -c option tells Bash to execute the command string that follows.
+#2. Why would you need it?
+#Suppose your Dockerfile contains:
+#SHELL ["/bin/bash", "-c"]
+
+#CMD source venv1/bin/activate && python3 manage.py runserver 0.0.0.0:8000
+
+
+#The source command is a Bash built-in. Using Bash ensures that this command is available.
+
+#Without the Bash shell, /bin/sh may not support source and could return:
+#source: not found
+
+
+#In a POSIX-compatible shell, the equivalent command is:
+#. venv1/bin/activate
+#this will run will instal python in the base os ubuntu and create a Virtual environment of python which is need for django pip install the package that are inside the requirements.txt file we have django and tzdata this will install
+
+#and goes into the djong folder where we have the project and app already configured
+
+#now run the virutal python environment and run the django application using python3 manage.py 0.0.0.0:8000 
+
+#ENTRYPOINT ["python3"]
+#ENTRYPOINT is used to set a non configurable run value
+#CMD ["manage.py", "runserver", "0.0.0.0:8000"]
+#in CMD we can set a configurable run value lik if django cannot run in 8000 we can set it in 8080 so it can be change if it is in CMD not ENTRYPOINT
+CMD source venv1/bin/activate && python3 manage.py runserver 0.0.0.0:8000
+
+Now this Dockerfile is ready:
+
+FROM ubuntu:latest
+
+WORKDIR /app
+
+COPY myapp /app/
+COPY requirements.txt /app/
+
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip python3-venv
+
+SHELL ["/bin/bash", "-c"]
+
+RUN python3 -m venv venv1 && \
+    source venv1/bin/activate && \
+    pip install -r /app/requirements.txt
+
+SHELL ["/bin/bash", "-c"]
+
+CMD source venv1/bin/activate && python3 manage.py runserver 0.0.0.0:8000
+
+
+build image 
+
+docker build -t praneshhub07/djangoimage:latest -f dj .
+
+RUN it in contanier
+
+docker run -it praneshhub07/djangoimage:latest 
+
+#but here we need to do port mapping like django inside the container it is going to run on 8000
+#but in host shoudl knnow this container should expose on 8000
+
+so we run like
+
+docker run -p 8000:8000 -itd praneshhub07/djangoimage:latest 
+# 8000:8000 container:host
+
+
+

@@ -12,7 +12,7 @@ docker run -> runs container from docker images
 docker push -> push the container image to public/private regestries to share the docker images.
 
 Dockerfile
-Dockerfile is a file where you provide the steps to build your Docker Image.
+Dockerfile is a file where you provide the steps to build your Docker Image.(base os, app lib, exec command,source code)
 
 Images
 An image is a read-only template with instructions for creating a Docker container. Often, an image is based on another image, with some additional customization. For example, you may build an image which is based on the ubuntu image, but installs the Apache web server and your application, as well as the configuration details needed to make your application run.
@@ -53,4 +53,22 @@ Files and Folders that containers use from host operating system
     Control groups (cgroups): Docker containers use cgroups to limit and control the amount of resources, such as CPU, memory, and I/O, that a container can access.
     
 
-It's important to note that while a container uses resources from the host operating system, it is still isolated from the host and other containers, so changes to the container do not affect the host or other containers
+It's important to note that while a container uses resources from the host operating system, it is still isolated from the host and other containers, so changes to the container do not affect the host or other 
+
+
+Docker daemon:(dockerd)
+
+It is the heart of the DOCKER, gets the cli cmnd from client and process it
+
+listens to the docker api req and manages the docker object such as image container network.
+
+
+So the Image as all dependencies of an app so it can run and shared to anyone it will work on any environment.
+
+Docker registries:
+
+DOCKER HUB regestries is where we store IMAGES share with other people
+
+
+
+

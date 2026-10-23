@@ -1,0 +1,124 @@
+Docker command reference
+========================
+
+Docker commands are entered in a terminal. Replace placeholders such as
+`IMAGE_NAME` and `CONTAINER_NAME` with your image or container names.
+
+Docker status and information
+-----------------------------
+
+docker --version
+Displays the installed Docker CLI version.
+
+docker info
+Shows information about the Docker Engine, including its configuration and
+available resources.
+
+docker help
+Lists Docker commands. Use `docker COMMAND --help` for help with a specific
+command, for example `docker run --help`.
+
+Images
+------
+
+docker images
+Lists images stored locally.
+
+docker pull IMAGE_NAME:TAG
+Downloads an image from a registry. Example: `docker pull nginx:latest`.
+
+docker build -t IMAGE_NAME:TAG .
+Builds an image using the Dockerfile in the current directory. The final
+`.` is the build context: the files Docker can access during the build.
+
+docker tag SOURCE_IMAGE:TAG USERNAME/IMAGE_NAME:TAG
+Adds a registry-ready name and tag to an existing local image.
+
+docker push USERNAME/IMAGE_NAME:TAG
+Uploads the tagged image to the registry. Log in first with `docker login`.
+
+docker rmi IMAGE_NAME:TAG
+Removes a local image. Containers that depend on the image may need to be
+removed first.
+
+Containers
+----------
+
+docker run IMAGE_NAME:TAG
+Creates and starts a container from an image.
+
+docker run -it IMAGE_NAME:TAG
+Starts a container interactively. `-i` keeps input open and `-t` provides
+a terminal.
+
+docker run -d --name CONTAINER_NAME IMAGE_NAME:TAG
+Starts a named container in the background. `-d` means detached mode.
+
+docker run -d --name web -p 8080:80 nginx:latest
+Runs Nginx in the background and forwards host port 8080 to container port
+80. Visit `http://localhost:8080`. In `-p HOST_PORT:CONTAINER_PORT`, the
+first port is on the host.
+
+docker ps
+Lists running containers.
+
+docker ps -a
+Lists all containers, including stopped containers.
+
+docker start CONTAINER_NAME
+Starts an existing stopped container.
+
+docker stop CONTAINER_NAME
+Gracefully stops a running container.
+
+docker restart CONTAINER_NAME
+Restarts an existing container.
+
+docker logs CONTAINER_NAME
+Displays a container's output. Add `-f` to follow new output as it appears.
+
+docker exec -it CONTAINER_NAME sh
+Opens a shell in a running container. Some images include `bash` instead
+of `sh`.
+
+docker inspect CONTAINER_NAME
+Displays detailed information about a container.
+
+docker commit CONTAINER_NAME IMAGE_NAME:TAG
+Creates a new image from the container's current filesystem changes. For
+example, `docker commit my-container my-custom-image:v1` saves the
+container's changes as a local image named `my-custom-image:v1`. This does
+not include data stored in mounted volumes. For repeatable builds, prefer
+updating a Dockerfile and building a new image.
+
+docker rm CONTAINER_NAME
+Removes a stopped container. Use `docker rm -f CONTAINER_NAME` to stop and
+remove a running container.
+
+Registries
+----------
+
+docker login --username USERNAME
+Signs in to a container registry. Enter your password or personal access
+token when prompted; do not put credentials directly in a command.
+
+docker logout
+Signs out of the current registry.
+
+Typical workflow
+----------------
+
+docker build -t my-app:v1 .
+docker run -d --name my-app -p 8000:8000 my-app:v1
+docker ps
+docker logs my-app
+docker stop my-app
+
+These commands build an image, run it with host port 8000 forwarded to
+container port 8000, check the running container, view its output, and stop
+it. To publish an image, tag it with your registry username, log in, and
+push it:
+
+docker tag my-app:v1 USERNAME/my-app:v1
+docker login --username USERNAME
+docker push USERNAME/my-app:v1
