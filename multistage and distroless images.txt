@@ -1,0 +1,103 @@
+#MULTISATGING 
+
+The purpose of this multisatge is to reduce the size of the image
+
+Without multistage 
+
+we build a docker file 
+
+FROM base osworkdir
+
+copy
+run 
+
+CMD
+this as like 800 mb if we buid the IMAGE
+
+
+Now with multi stage concept 
+Docker file will be like
+
+FROM ubuntu:latest AS build # keeping alias name form thsi ubuntu 
+
+WORKDIR /app
+
+COPY main.go /app
+
+RUN apt-get update && apt-get install -y golang-go
+
+ENV GO111MODULE=off
+
+RUN CGO_ENABLED=0 go build -o /app1 . #upto this it is a build stage
+
+FROM scratch # here the next stage that is final stage is staring 
+
+COPY --from=build /app1 /app1 # This will get the whole build stage as binary and get the content from the src stg to the this des stg 
+
+ENTRYPOINT ["/app1"] # run the go lang
+
+DISTROLESS IMAGES:
+
+A distroless image contains an application runtime and the necessary supporting files, without a conventional operating-system user space full of shells, package managers and general-purpose utilities.
+
+For example, a Java distroless image can provide a Java runtime without including a shell or package manager.
+
+
+A distroless image is not necessarily empty. Unlike scratch, it can contain runtime libraries, CA certificates and other supporting files.
+
+It has only runtime no OS package will be there so the size is less
+
+Advantages:
+
+as it has only runtime of prog language security is high as there no OS package so OS threat vulnerabilty is low
+
+and reduce the size tool
+
+
+DOCKER FILE WITHOUT build stage:
+
+[ec2-user@ip-10-0-0-190 gol]$ cat go
+FROM ubuntu:latest
+
+WORKDIR /app
+
+COPY . /app
+
+RUN apt-get update && apt-get install -y golang-go
+
+ENV GO111MODULE=off
+
+RUN CGO_ENABLED=0 go build -o /app1 .
+
+ENTRYPOINT ["/app1"]
+
+
+DOCKERFILE WITH BUILD STAGE:
+
+FROM ubuntu:latest AS build
+
+WORKDIR /app
+
+COPY main.go /app
+
+RUN apt-get update && apt-get install -y golang-go
+
+ENV GO111MODULE=off
+
+RUN CGO_ENABLED=0 go build -o /app1 .
+
+FROM scratch
+
+COPY --from=build /app1 /app
+
+ENTRYPOINT ["/app"]
+
+
+REPOSITORY                     TAG       IMAGE ID       CREATED          SIZE
+gonew                          latest    0bd2b97558c4   4 seconds ago    8.62MB
+gotest                         latest    075071c00b39   10 minutes ago   746MB
+praneshdoc07/django-app        v2        cafb970bcf0f   46 hours ago     599MB
+praneshdoc07/djangoimage       latest    31606144c270   47 hours ago     599MB
+praneshdoc07/first-doc-image   latest    426c96a740e9   2 days ago       546MB
+praneshdoc07/test              latest    6d7f85d6392d   2 weeks ago      101MB
+[ec2-user@ip-10-0-0-190 gol]$ cat go
