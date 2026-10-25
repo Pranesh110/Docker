@@ -6,7 +6,9 @@
 
 #once done as we create role in ansile-galaxy
 
-#we use django cmnd lik django-admin startproject projectname
+#we use django cmnd lik 
+
+django-admin startproject projectname
 
 #this will create a structure of files with py extension
 
