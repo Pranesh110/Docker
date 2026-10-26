@@ -1,0 +1,401 @@
+DOCKER NETWORKING
+=================
+
+Docker networking is the way containers communicate with each other,
+with the host machine, and with the outside world. Docker does not give
+containers a direct host network by default. Instead, it creates virtual
+networks(docker 0) and connects containers to them.
+
+How a container gets internet access
+------------------------------------
+
+A container gets internet access through the host machine's network stack.
+Docker creates a virtual network interface for the container and connects it
+to a Docker bridge network or another Docker network driver. The traffic from
+the container is then forwarded through the host OS networking layer.
+
+In simple terms:
+- The container has its own network namespace
+- Docker gives it a virtual interface such as eth0
+- That interface connects to the Docker bridge or custom network
+- The Docker engine forwards packets to the host machine's NIC
+- The host machine then sends the traffic to the internet through its own
+  network connection
+
+So even though the container is isolated, it still depends on the host's
+networking to reach the internet.
+
+Example:
+
+docker run -d --name web nginx
+
+This container can access the internet only if the host machine itself has
+working internet access.
+
+If the host has no internet
+--------------------------
+
+If the host machine has no internet connection, the container usually also
+cannot access the internet.
+
+Why?
+- The container does not have its own physical internet connection
+- It uses the host OS as the gateway
+- If the host is disconnected from the network, Docker traffic cannot leave
+the machine
+
+So the result is:
+- The container cannot download packages or images from Docker Hub
+- The app inside the container cannot make outbound HTTP/HTTPS calls
+- Internal container-to-container communication may still work if they are
+  on the same Docker network
+- But external internet connectivity will fail
+
+Example:
+
+docker run -it alpine ping google.com
+
+If the host has no internet, this command will fail because the container is
+using the host network path to reach the outside network.
+
+Important note:
+- Container-to-container communication on the same Docker network still works
+  even without internet access
+- External internet access depends on the host internet connection
+
+Docker NAT and gateway
+----------------------
+
+Docker uses Network Address Translation (NAT) for outbound internet access.
+The container's private IP is translated by Docker to the host's public or
+private network address when traffic leaves the Docker network.
+
+This means:
+- Container IPs are generally private addresses
+- Docker handles translation so outbound traffic appears to come from the
+  host's network
+
+A Docker bridge network usually has a gateway assigned by Docker, and the
+traffic is routed through that gateway to the host's network stack.
+
+This is why containers can reach the internet even though they use internal
+private IPs.
+
+Why networking is important
+---------------------------
+
+In real-world applications, different containers often work together:
+- Web app container connects to a database container
+- Frontend app communicates with backend API
+- Multiple services need to talk to each other securely
+- Some containers need access from outside the host
+
+Without networking, containers would run in isolation and would not be able
+to share data or communicate with each other.
+
+Docker default network behavior
+------------------------------
+
+When you run a container without specifying a network, Docker connects it to
+a default bridge network.
+
+Bridge network:
+- Default network for standalone containers
+- Containers on the same bridge network can communicate by IP or container
+  name
+- Containers are isolated from other networks by default
+- This is the most common networking model for Docker local development
+
+Example:
+
+docker run -d --name nginx nginx
+
+docker run -d --name redis redis
+
+These containers are attached to Docker's default bridge network. They can
+talk to each other using container names or IP addresses if they are on the
+same network.
+
+Key networking concepts
+-----------------------
+
+1. Container IP address
+   Every container gets its own IP address inside the Docker network.
+   This IP is private to the Docker network and is not directly visible on the
+   local network.
+
+2. Port mapping
+   A container usually runs an application on an internal port (for example,
+   80 or 8080). To access that application from outside Docker, we map a host
+   port to the container port.
+
+   Example:
+
+   docker run -d -p 8080:80 --name web nginx
+
+   Here:
+   - 8080 = host port
+   - 80 = container port
+
+   Now you can open http://localhost:8080 and reach the app running in the
+   container.
+
+3. Container-to-container communication
+   Containers in the same Docker network can communicate using:
+   - container IP address
+   - container name
+   - DNS hostname
+
+   Example:
+
+   docker run -d --name app my-app
+   docker run -d --name db postgres
+
+   The app container can reach the database by using db or the database
+   container's IP address.
+
+4. Docker DNS
+   Docker provides built-in DNS for containers on the same network. If a
+   container is linked to the same network, it can resolve other containers by
+   their names.
+
+   Example:
+   app container can call:
+   http://db:5432
+
+   This works because Docker resolves db to the database container's IP.
+
+Docker network drivers
+----------------------
+
+Docker supports different network drivers depending on the use case.
+
+Bridge
+------
+The bridge network is the default Docker network for containers on a single
+host.
+
+Use bridge when:
+- Containers are on the same machine
+- You want simple communication between containers
+- You need a default private network for local apps
+
+Example:
+
+docker network create my-network
+
+docker run -d --name web --network my-network nginx
+docker run -d --name db --network my-network postgres
+
+Now the web container and db container can communicate over my-network.
+
+Host
+----
+The host network driver removes the networking isolation and directly uses the
+host's network interfaces.
+
+Use host when:
+- You want maximum performance
+- You do not need container isolation for networking
+- You are running advanced networking scenarios
+
+Example:
+
+docker run --network host nginx
+
+In host mode, the container shares the host network stack. It is not a
+separate network namespace for networking.
+
+None
+----
+The none network driver removes all network interfaces from the container.
+It has no IP address and cannot talk to the network.
+
+Use none when:
+- You want a completely isolated container
+- You only need local filesystem or processing
+- The app does not require networking
+
+Example:
+
+docker run --network none alpine
+
+Overlay
+-------
+The overlay network is used for containers across multiple Docker hosts,
+usually in Docker Swarm mode.
+
+Use overlay when:
+- Multiple hosts must communicate
+- You need a multi-node distributed application
+- Services are spread across machines
+
+This is useful in production environments and clustered setups.
+
+Macvlan
+-------
+Macvlan attaches a container directly to a physical network interface. The
+container appears as a separate device on the network.
+
+Use macvlan when:
+- You need a container to look like a physical machine on the network
+- Advanced networking is required
+
+Managing Docker networks
+------------------------
+
+List all networks:
+
+docker network ls
+
+Inspect a network:
+
+docker network inspect my-network
+
+Create a new network:
+
+docker network create my-network
+
+Remove a network:
+
+docker network rm my-network
+
+Connect a running container to a network:
+
+docker network connect my-network web
+
+Disconnect a container from a network:
+
+docker network disconnect my-network web
+
+Container networking example
+---------------------------
+
+Example with a frontend and backend:
+
+1. Create a custom Docker network:
+
+docker network create app-net
+
+2. Run a database container on app-net:
+
+docker run -d --name db --network app-net postgres
+
+3. Run the application container on the same network:
+
+docker run -d --name app --network app-net -p 8080:8080 my-app
+
+4. The app can connect to the database using the service name db instead of
+   the container IP.
+
+This is a common pattern in microservices and multi-container apps.
+
+Port publishing and security
+----------------------------
+
+Port publishing allows access from outside the container environment, but it
+also creates exposure to the host machine and potentially the public network.
+
+Example:
+
+docker run -d -p 80:80 nginx
+
+This means:
+- host port 80 is mapped to container port 80
+- traffic from host reaches the container
+
+Security best practices:
+- Publish only required ports
+- Avoid exposing dangerous services unnecessarily
+- Use Docker networks for internal communication instead of exposing everything
+- Keep containers isolated in user-defined networks
+
+Network isolation
+-----------------
+
+Docker networking helps isolate applications. Containers in different Docker
+networks cannot communicate until they are explicitly connected. This reduces
+conflicts and prevents accidental service exposure.
+
+For example:
+- app-network: web + api
+- db-network: database
+
+If the database is only on db-network, the web container cannot reach it
+unless it is connected to the same network or a port is exposed.
+
+Troubleshooting networking issues
+--------------------------------
+
+Common issues include:
+- Container cannot reach another container
+- Port binding fails
+- Application not reachable from browser
+- Wrong network selected
+
+Useful commands:
+
+docker ps
+
+docker inspect <container-name>
+
+docker network inspect <network-name>
+
+docker logs <container-name>
+
+docker exec -it <container-name> sh
+
+Inside the container you can test connectivity:
+
+ping <container-name>
+
+or:
+
+cat /etc/hosts
+
+This helps verify that Docker DNS and network setup are working correctly.
+
+Summary
+-------
+
+Docker networking is the foundation that enables communication among
+containers and between containers and external systems. The main types are:
+- Bridge: default, useful for local apps
+- Host: shares host network directly
+- None: no network at all
+- Overlay: multi-host networking
+- Macvlan: advanced direct network attachment
+
+Using user-defined networks and proper port mapping allows applications to be
+connected, isolated, secure, and easy to manage.
+
+Important Docker networking commands
+------------------------------------
+
+docker network ls
+
+docker network create my-network
+docker network inspect my-network
+docker network connect my-network container-name
+docker network disconnect my-network container-name
+docker network rm my-network
+
+docker run -d -p 8080:80 --name web nginx
+docker run --network host nginx
+docker run --network none alpine
+
+These are the main commands used to create, inspect, connect, and manage
+Docker networks in a containerized environment.
+
+Docker networking in one line:
+"Containers talk to each other through virtual Docker networks, and ports are
+published to allow external access to specific services."
+
+
+
+Creating a particular subnet for a custom network and assign ip to the container:
+
+
+docker network create --subnet 172.20.0.0/24 --gateway 172.20.0.1 app-net
+
+docker run -d --name test --network=app-net --ip 172.20.0.7 ubuntu:latest

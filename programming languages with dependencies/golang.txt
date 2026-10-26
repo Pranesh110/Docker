@@ -1,0 +1,88 @@
+Why is Go different?
+With Java, your source code is compiled into bytecode:
+Java source → javac → .class files → JVM executes them
+
+
+With Python:
+Python source → Python interpreter executes the program
+
+
+With Go:
+Go source → go build → native executable
+
+
+The Go compiler normally produces an executable for a particular operating system and CPU architecture. You can copy that executable to a compatible machine and run it without installing Go there.
+3. Let's test this on your Ubuntu machine
+Install Go:
+sudo apt update
+sudo apt install -y golang-go
+
+
+Check it:
+go version
+
+
+Create a project:
+mkdir -p ~/lang/go
+cd ~/lang/go
+nano main.go
+
+
+Paste:
+package main
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+)
+
+func main() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"application": "Go HTTP Server",
+			"status":      "running",
+		})
+	})
+
+	log.Println("Go server listening on port 8080")
+	log.Fatal(http.ListenAndServe("0.0.0.0:8080", nil))
+}
+
+
+Save the file, then build:
+go build -o go-app main.go
+
+
+Check the output:
+file go-app
+ls -lh go-app
+
+
+Run it:
+./go-app
+
+
+In another terminal:
+curl http://localhost:8080/
+
+
+You can explicitly build a static Linux binary for many pure-Go applications using:
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o go-app main.go
+
+
+Why is CGO_ENABLED=0 important?
+Normally, Go can use C libraries through CGO. If your application uses those libraries, the resulting executable may depend on additional shared libraries being available on the target machine.
+
+With CGO_ENABLED=0, Go disables that integration. For many pure-Go applications, this helps produce a binary that does not require external C shared libraries.
+
+
+Focus on this command:
+go build -o /out/go-app main.go
+
+
+- go build compiles your Go code.
+- -o specifies the output file path.
+- /out/go-app is the path where the compiled executable is created.
+- main.go is your source code.

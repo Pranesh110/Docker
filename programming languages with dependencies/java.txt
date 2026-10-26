@@ -1,0 +1,232 @@
+ava on your Ubuntu machine without Spring Boot or any framework
+
+
+Install Java and the compiler
+Run:
+sudo apt update
+sudo apt install -y openjdk-21-jdk
+
+java -version
+javac -version
+
+
+mkdir -p ~/lang/java
+cd ~/lang/java
+
+Create a source file:
+nano App.java
+
+import com.sun.net.httpserver.HttpServer;
+import com.sun.net.httpserver.HttpExchange;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+
+public class App {
+
+    public static void main(String[] args) throws IOException {
+        HttpServer server = HttpServer.create(
+            new InetSocketAddress("0.0.0.0", 8080), 0
+        );
+
+        server.createContext("/", exchange -> {
+            String response = """
+                {"application":"Pure Java HTTP Server","status":"running","version":"1.0.0"}
+                """;
+            sendResponse(exchange, 200, response);
+        });
+
+        server.createContext("/health", exchange -> {
+            String response = "{\"status\":\"healthy\"}";
+            sendResponse(exchange, 200, response);
+        });
+
+        server.start();
+        System.out.println("Java application listening on port 8080");
+    }
+
+    private static void sendResponse(
+            HttpExchange exchange, int status, String response)
+            throws IOException {
+
+        byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set(
+            "Content-Type", "application/json; charset=UTF-8"
+        );
+        exchange.sendResponseHeaders(status, bytes.length);
+        exchange.getResponseBody().write(bytes);
+        exchange.close();
+    }
+}
+
+
+Compile the application
+javac --add-modules jdk.httpserver App.java
+
+You should now have:
+App.java
+App.class
+
+
+What happened?
+- App.java is your source code.
+- javac compiled it into App.class, containing Java bytecode.
+- The bytecode runs on a compatible Java runtime.
+
+
+Run the application
+java --add-modules jdk.httpserver App
+
+ava application listening on port 8080
+nohup java --add-modules jdk.httpserver App > app.log 2>&1 &
+
+
+WITH SPRINGBOOT
+
+sudo apt update
+sudo apt install -y openjdk-21-jdk maven
+
+
+java -version
+javac -version
+mvn -version
+
+What each tool does:
+- JDK: Java compiler and runtime.
+- Maven: downloads libraries, compiles code, runs tests, and packages the application.
+- Spring Boot: the framework your application will use.
+- Tomcat: the embedded web server Spring Boot commonly uses for a servlet-based application.
+
+Create the Spring Boot project
+We'll use Maven and create the project manually so you understand every file.
+mkdir -p ~/lang/springboot-app
+cd ~/lang/springboot-app
+
+mkdir -p src/main/java/com/example/demo
+
+
+Create pom.xml
+This file defines the Java project, Spring Boot version, dependencies, and build configuration.
+nano pom.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.4.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.example</groupId>
+    <artifactId>springboot-app</artifactId>
+    <version>1.0.0</version>
+    <name>springboot-app</name>
+
+    <properties>
+        <java.version>21</java.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
+
+What is spring-boot-starter-web? It's a dependency bundle that brings in Spring MVC, JSON handling, and an embedded Tomcat server. Maven downloads the necessary libraries automatically.
+
+nano src/main/java/com/example/demo/DemoApplication.java
+
+
+package com.example.demo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
+}
+
+This is the application's entry point. When you run the JAR, Java invokes main(), and Spring Boot initializes the application and starts its embedded web server.
+
+
+nano src/main/java/com/example/demo/HelloController.java
+
+package com.example.demo;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
+
+@RestController
+public class HelloController {
+
+    @GetMapping("/")
+    public Map<String, String> home() {
+        return Map.of(
+            "application", "Spring Boot REST API",
+            "status", "running",
+            "version", "1.0.0"
+        );
+    }
+
+    @GetMapping("/health")
+    public Map<String, String> health() {
+        return Map.of("status", "healthy");
+    }
+}
+
+
+Here:
+- @RestController marks the class as a REST API controller.
+- @GetMapping("/") handles HTTP GET requests to /.
+- @GetMapping("/health") handles health-check requests.
+- Map responses are automatically serialized into JSON.
+
+
+Build the application
+From ~/lang/springboot-app, run:
+mvn clean package
+
+
+Maven will download dependencies, compile your source code, and package the application.
+Verify the JAR exists:
+
+ls -lh target/
+
+
+You should see a file similar to:
+springboot-app-1.0.0.jar
+
+This is an executable JAR. The Spring Boot Maven plugin packages your application classes and runtime dependencies into it.
+
+
+Run the application
+java -jar target/springboot-app-1.0.0.jar
+
+nohup java -jar target/springboot-app-1.0.0.jar > app.log 2>&1 &
+

@@ -1,0 +1,135 @@
+
+Python + Flask on Ubuntu
+
+
+Install Python and required tools
+sudo apt update
+sudo apt install -y python3 python3-pip python3-venv
+
+
+python3 runs Python code.
+
+
+
+pip3 installs Python packages.
+
+
+
+python3-venv lets you create an isolated Python environment for your application
+
+
+mkdir -p ~/lang/python
+cd ~/lang/python
+
+Create a virtual environment:
+python3 -m venv venv
+
+
+What each part means
+Part	Meaning
+python3	Runs Python 3
+-m	Runs a Python module as a script
+venv	Python's built-in virtual environment module
+venv (last word)	Directory name where the environment is created
+
+Project 1 — Django application
+
+~/lang/django-app/venv/
+source ~/lang/django-app/venv/bin/activate
+pip install django
+
+
+Django and its dependencies are installed in this environment.
+
+
+Project 2 — Flask application
+
+~/lang/flask-app/venv/
+source ~/lang/flask-app/venv/bin/activate
+pip install flask
+
+
+Flask and its dependencies are installed separately.
+
+
+Both environments use Python, but their third-party packages are isolated.
+
+
+Activate it:
+source venv/bin/activate
+
+Flask is a Python web framework, similar in purpose to Express in your Node.js lab.
+
+pip install Flask
+
+
+Create the application
+Create the file:
+nano app.py
+
+from flask import Flask, jsonify
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return jsonify({
+        "application": "Python Flask API",
+        "status": "running",
+        "version": "1.0.0"
+    })
+
+@app.route("/health")
+def health():
+    return jsonify({"status": "healthy"})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
+
+
+
+
+Run the application
+Make sure your virtual environment is active, then run:
+python3 app.py
+
+
+Run it in the background
+Stop the foreground application using Ctrl+C, then:
+cd ~/lang/python
+source venv/bin/activate
+nohup python3 app.py > app.log 2>&1 &
+
+To run app without flask framework:
+
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import json
+
+class AppHandler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+        if self.path == "/":
+            data = {
+                "application": "Pure Python HTTP Server",
+                "status": "running",
+                "version": "1.0.0"
+            }
+            self.send_response(200)
+
+        elif self.path == "/health":
+            data = {"status": "healthy"}
+            self.send_response(200)
+
+        else:
+            data = {"error": "Not Found"}
+            self.send_response(404)
+
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
+
+server = HTTPServer(("0.0.0.0", 5000), AppHandler)
+
+print("Python application listening on port 5000", flush=True)
+
+server.serve_forever()

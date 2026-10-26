@@ -1,0 +1,92 @@
+#Now to run an application on node js
+
+To start with
+sudo apt install -y nodejs npm
+
+mkdir -p ~/language-labs/node-app
+cd ~/language-labs/node-app
+
+
+Initialize a Node.js project:
+npm init -y
+
+
+This creates package.json, which records project metadata and dependencies.
+
+
+Install Express
+npm install express
+
+
+This downloads Express and its dependencies into node_modules/ and updates package.json and package-lock.json.
+
+Create a app:
+nano app.js
+
+const express = require('express');
+
+const app = express();
+const PORT = 3000;
+
+app.get('/', (req, res) => {
+    res.json({
+        application: 'Node.js Express API',
+        status: 'running',
+        version: '1.0.0'
+    });
+});
+
+app.get('/health', (req, res) => {
+    res.json({ status: 'healthy' });
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Application listening on port ${PORT}`);
+});
+
+
+
+Understand the important lines:
+- require('express') loads the Express dependency.
+- app.get('/') defines the home endpoint.
+- app.get('/health') defines a health-check endpoint.
+- app.listen(...) starts the HTTP server.
+- 0.0.0.0 allows connections through the machine's network interfaces, not just loopback.
+
+
+Step 5 — Run the application
+node app.js
+
+nohup node app.js > app.log 2>&1 & -- to run it continuoulsy on BG
+
+nohup node app.js > app.log 2>&1 &
+
+
+What each part does:
+- nohup — prevents the process from receiving the usual hangup signal when the terminal closes.
+- node app.js — starts your application.
+- > app.log — saves output to a log file.
+- 2>&1 — sends errors to the same log file.
+- & — runs the process in the background.
+
+WIthour express  you can still run
+
+const http = require('http');
+
+const server = http.createServer((req, res) => {
+    if (req.url === '/') {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('Hello from Node.js!');
+    } else {
+        res.writeHead(404);
+        res.end('Not Found');
+    }
+});
+
+server.listen(3000, '0.0.0.0', () => {
+    console.log('Server running on port 3000');
+});
+
+
+
+dont need to install express and node_moudule

@@ -1,0 +1,73 @@
+Step 1: Create the original container
+docker run -dit \
+  --mount type=volume,target=/dbdata \
+  --name dbstore \
+  ubuntu:latest bash
+
+
+Because we didn't specify source=, Docker creates an anonymous volume mounted at /dbdata.
+
+Add sample data:
+docker exec dbstore bash -c \
+  'echo "My important database backup data" > /dbdata/data.txt'
+
+docker exec dbstore bash -c \
+  'mkdir -p /dbdata/reports && echo "Report 2026" > /dbdata/reports/report.txt'
+
+
+Verify:
+docker exec dbstore ls -R /dbdata
+
+
+Step 2: Create a backup using --volumes-from
+Create a host backup directory:
+mkdir -p ~/docker-backups
+cd ~/docker-backups
+
+
+Run:
+docker run --rm \
+  --volumes-from dbstore \
+  --mount type=bind,source="$(pwd)",target=/backup \
+  ubuntu:latest \
+  tar cvf /backup/backup.tar -C /dbdata .
+
+
+What happens:
+- --volumes-from dbstore mounts the volume(s) attached to dbstore into the temporary container.
+- --mount type=bind exposes your current host directory at /backup.
+- tar cvf creates backup.tar from the contents of /dbdata.
+- --rm removes the temporary backup container after it exits.
+Check the backup:
+ls -lh backup.tar
+tar -tf backup.tar
+
+
+Step 3: Create the restore container
+Create another container with its own anonymous volume:
+docker run -dit \
+  --mount type=volume,target=/dbdata \
+  --name dbstore2 \
+  ubuntu:latest bash
+
+
+Step 4: Restore using --volumes-from
+Run:
+docker run --rm \
+  --volumes-from dbstore2 \
+  --mount type=bind,source="$(pwd)",target=/backup,readonly \
+  ubuntu:latest \
+  tar xvf /backup/backup.tar -C /dbdata
+
+
+This extracts the archive into the /dbdata volume attached to dbstore2.
+Step 5: Verify the restored data
+docker exec dbstore2 cat /dbdata/data.txt
+
+
+Expected output:
+My important database backup data
+
+
+Check the reports too:
+docker exec dbstore2 cat /dbdata/reports/report.txt

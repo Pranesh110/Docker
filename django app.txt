@@ -50,11 +50,13 @@ nano views.py
 
 
 Add:
-from django.shortcuts import renderdef home(request):    return render(request, "index.html")
+from django.shortcuts 
+import renderdef home(request):   
+ return render(request, "index.html")
 
 
 #Step 3: Configure the app URL
-Create or edit demo/urls.py:
+Create  demo/urls.py:
 nano demo/urls.py
 
 
