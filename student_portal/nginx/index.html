@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Registration</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #ccc;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #2563eb;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        #message {
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Student Registration</h1>
+
+    <h2>Add Student</h2>
+
+    <form id="studentForm">
+
+        <label>Registration Number</label>
+        <input type="text" id="reg_no" required>
+
+        <label>Name</label>
+        <input type="text" id="name" required>
+
+        <label>Age</label>
+        <input type="number" id="age" min="1" required>
+
+        <label>Student ID</label>
+        <input type="text" id="student_id" required>
+
+        <button type="submit">Add Student</button>
+
+    </form>
+
+    <hr>
+
+    <h2>Search Student</h2>
+
+    <form id="searchForm">
+
+        <label>Registration Number</label>
+        <input type="text" id="search_reg_no" required>
+
+        <button type="submit">Fetch Details</button>
+
+    </form>
+
+    <div id="message"></div>
+
+    <div id="studentDetails"></div>
+
+</div>
+
+<script>
+
+    const message = document.getElementById("message");
+
+    // Add student
+    document.getElementById("studentForm").addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        const student = {
+            reg_no: document.getElementById("reg_no").value,
+            name: document.getElementById("name").value,
+            age: document.getElementById("age").value,
+            student_id: document.getElementById("student_id").value
+        };
+
+        try {
+            const response = await fetch("/api/index.php?action=add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(student)
+            });
+
+            const result = await response.json();
+
+            message.textContent = result.message;
+
+            if (response.ok) {
+                document.getElementById("studentForm").reset();
+            }
+
+        } catch (error) {
+            message.textContent = "Unable to connect to PHP backend";
+        }
+    });
+
+
+    // Search student
+    document.getElementById("searchForm").addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        const reg_no = document.getElementById("search_reg_no").value;
+
+        try {
+            const response = await fetch(
+                "/api/index.php?action=fetch&reg_no=" + encodeURIComponent(reg_no)
+            );
+
+            const result = await response.json();
+
+            if (response.ok) {
+
+                document.getElementById("studentDetails").innerHTML = `
+                    <h2>Student Details</h2>
+                    <p><strong>Name:</strong> ${result.name}</p>
+                    <p><strong>Age:</strong> ${result.age}</p>
+                    <p><strong>Student ID:</strong> ${result.student_id}</p>
+                `;
+
+                message.textContent = "";
+
+            } else {
+                document.getElementById("studentDetails").innerHTML = "";
+                message.textContent = result.message;
+            }
+
+        } catch (error) {
+            message.textContent = "Unable to connect to PHP backend";
+        }
+    });
+
+</script>
+
+</body>
+</html>
