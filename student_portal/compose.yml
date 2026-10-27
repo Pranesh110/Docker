@@ -75,3 +75,4 @@ networks:
 
 volumes:
   dbvol:
+   name: student_portal_dbvol
