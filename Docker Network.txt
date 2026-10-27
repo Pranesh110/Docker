@@ -399,3 +399,8 @@ Creating a particular subnet for a custom network and assign ip to the container
 docker network create --subnet 172.20.0.0/24 --gateway 172.20.0.1 app-net
 
 docker run -d --name test --network=app-net --ip 172.20.0.7 ubuntu:latest
+
+
+
+Create an internal bridge network:(no internat access)
+docker network create --driver bridge --internal backend-network
