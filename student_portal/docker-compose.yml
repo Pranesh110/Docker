@@ -1,0 +1,77 @@
+services:
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: nginxdockerfile
+    image: nginximage:v1
+    container_name: nginx_container
+    ports:
+      - "80:80"
+    networks:
+      front-network:
+        ipv4_address: 172.20.0.5
+    depends_on:
+      - php
+
+  php:
+    build:
+      context: ./php
+      dockerfile: phpdockerfile
+    image: phpimage:v1
+    container_name: phpcontainer
+    networks:
+      front-network:
+        ipv4_address: 172.20.0.6
+      backend-network:
+        ipv4_address: 172.21.0.5
+    environment:
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    build:
+      context: ./mariadb
+      dockerfile: dbdockerfile
+    image: mariadbimage:v1
+    container_name: mariadb_container
+    networks:
+      backend-network:
+        ipv4_address: 172.21.0.4
+    environment:
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - dbvol:/var/lib/mysql
+      - ./mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+networks:
+  front-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
+
+  backend-network:
+    driver: bridge
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.21.0.0/24
+          gateway: 172.21.0.1
+
+volumes:
+  dbvol:
