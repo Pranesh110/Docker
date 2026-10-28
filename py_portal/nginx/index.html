@@ -1,0 +1,317 @@
+**File: `nginx/index.html`**
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Student Portal</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1120;
+      --panel: #121c2e;
+      --line: #26344a;
+      --text: #edf2ff;
+      --muted: #9eabc2;
+      --accent: #7c9cff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, Segoe UI, sans-serif;
+      background: radial-gradient(ellipse at top, #172846 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 48px 22px;
+    }
+
+    header {
+      margin-bottom: 30px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: .14em;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 10px 0;
+      font-size: clamp(30px, 5vw, 44px);
+      letter-spacing: -.04em;
+    }
+
+    header p {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: rgba(18, 28, 46, .94);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 16px 45px #0002;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin: 0 0 18px;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin: 13px 0 7px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #0b1424;
+      color: var(--text);
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+    }
+
+    button {
+      margin-top: 18px;
+      width: 100%;
+      padding: 12px 14px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #091124;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:hover {
+      filter: brightness(1.08);
+    }
+
+    .result {
+      min-height: 24px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .student {
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      line-height: 1.7;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 20px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #36d399;
+    }
+
+    footer {
+      color: #74829b;
+      font-size: 12px;
+      margin-top: 25px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="wrap">
+
+    <header>
+      <div class="eyebrow">Student services · Demo application</div>
+
+      <h1>Student Portal</h1>
+
+      <p>
+        Register students and look up records using the Python API.
+      </p>
+
+      <div class="status">
+        <span class="dot"></span>
+        Frontend served by Nginx
+      </div>
+    </header>
+
+    <section class="grid">
+
+      <article class="card">
+        <h2>Register a student</h2>
+
+        <form id="registerForm">
+          <label for="regNo">Registration number</label>
+          <input
+            id="regNo"
+            required
+            placeholder="e.g. SRM2026001"
+          >
+
+          <label for="studentName">Full name</label>
+          <input
+            id="studentName"
+            required
+            placeholder="Student name"
+          >
+
+          <label for="age">Age</label>
+          <input
+            id="age"
+            type="number"
+            min="1"
+            max="120"
+            required
+            placeholder="21"
+          >
+
+          <button type="submit">Register student</button>
+        </form>
+
+        <div id="registerResult" class="result" role="status"></div>
+      </article>
+
+      <article class="card">
+        <h2>Find a student</h2>
+
+        <form id="searchForm">
+          <label for="searchRegNo">Registration number</label>
+          <input
+            id="searchRegNo"
+            required
+            placeholder="Enter registration number"
+          >
+
+          <button type="submit">Search record</button>
+        </form>
+
+        <div id="searchResult" class="result" aria-live="polite"></div>
+      </article>
+
+    </section>
+
+    <footer>
+      Learning project · Nginx + Flask + MariaDB · Docker Compose
+    </footer>
+
+  </main>
+
+  <script>
+    const registerForm = document.getElementById("registerForm");
+    const registerResult = document.getElementById("registerResult");
+    const searchForm = document.getElementById("searchForm");
+    const searchResult = document.getElementById("searchResult");
+
+    registerForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      registerResult.textContent = "Submitting…";
+
+      const payload = {
+        reg_no: document.getElementById("regNo").value.trim(),
+        name: document.getElementById("studentName").value.trim(),
+        age: Number(document.getElementById("age").value)
+      };
+
+      try {
+        const response = await fetch("/api/students", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Registration failed");
+        }
+
+        registerResult.textContent =
+          `Success: ${data.message} (ID ${data.id})`;
+
+        registerForm.reset();
+
+      } catch (error) {
+        registerResult.textContent = error.message;
+      }
+    });
+
+    searchForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      searchResult.textContent = "Searching…";
+
+      const regNo =
+        document.getElementById("searchRegNo").value.trim();
+
+      try {
+        const response = await fetch(
+          `/api/students?reg_no=${encodeURIComponent(regNo)}`
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Search failed");
+        }
+
+        searchResult.innerHTML = "";
+
+        const card = document.createElement("div");
+        card.className = "student";
+
+        card.textContent =
+          `Registration: ${data.reg_no} | ` +
+          `Name: ${data.name} | Age: ${data.age}`;
+
+        searchResult.appendChild(card);
+
+      } catch (error) {
+        searchResult.textContent = error.message;
+      }
+    });
+  </script>
+</body>
+</html>
+```

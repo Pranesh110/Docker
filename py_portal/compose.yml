@@ -1,0 +1,69 @@
+services:
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: nginxdockerfile
+    image: nginx_py:v1
+    container_name: student_nginx_python
+    ports:
+      - "80:80"
+    depends_on:
+      python:
+        condition: service_started
+    networks:
+      student_portal_front-network:
+        ipv4_address: 172.20.0.8
+    restart: unless-stopped
+
+  python:
+    build:
+      context: ./python
+      dockerfile: pythondockerfile
+    image: python_py:v1
+    container_name: student_python_python
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: ${MARIADB_DATABASE}
+      DB_USER: ${MARIADB_USER}
+      DB_PASSWORD: ${MARIADB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      student_portal_front-network:
+        ipv4_address: 172.20.0.9
+      student_portal_backend-network:
+        ipv4_address: 172.21.0.9
+    restart: unless-stopped
+
+  db:
+    build:
+      context: ./mariadb
+      dockerfile: dbdockerfile
+    image: mariadb:11
+    container_name: student_mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+    volumes:
+      - dbpvol:/var/lib/mysql
+      - ./mariadb/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    networks:
+      student_portal_backend-network:
+        ipv4_address: 172.21.0.10
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+
+
+volumes:
+  dbpvol:
+    name: student_portal_python_dbpvol
