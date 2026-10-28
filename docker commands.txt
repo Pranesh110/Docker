@@ -122,3 +122,22 @@ push it:
 docker tag my-app:v1 USERNAME/my-app:v1
 docker login --username USERNAME
 docker push USERNAME/my-app:v1
+
+
+
+
+
+Check Docker disk usage
+Run these commands on your Docker host:
+docker system df
+
+
+To remove unused Docker build cache:
+docker builder prune
+
+
+To remove unused images, containers, and networks:
+docker system prune
+
+
+Be careful: pruning can remove resources you may want to keep. Avoid docker system prune -a --volumes unless you understand what it will delete.
