@@ -1,0 +1,8 @@
+Command	Purpose
+docker inspect <container>	Inspect container configuration
+docker exec <container> whoami	Check the container's current user
+docker image inspect <image>	Inspect image details
+docker stats	View container resource usage
+docker port <container>	View published ports
+docker network inspect <network>	Inspect network configuration
+docker history <image>	View image build layers

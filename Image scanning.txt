@@ -1,0 +1,23 @@
+Scan Docker images for vulnerabilities
+Images can contain vulnerable operating-system packages or application dependencies.
+
+One common tool is Trivy.
+
+Example:
+trivy image student-portal-django:v1
+
+
+It can report vulnerabilities in:
+- OS packages
+- Python packages
+- Other supported application dependencies
+Example of the type of result:
+Package       Vulnerability    Severity
+------------------------------------------------
+openssl       CVE-XXXX         HIGH
+some-python   CVE-YYYY         CRITICAL
+
+
+The example IDs above are placeholders.
+
+Scanning is useful before deploying an image to a registry or production environment.

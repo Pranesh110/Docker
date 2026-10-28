@@ -17,31 +17,6 @@ Nginx-- dockerfile, confi
 web-- node.js , docker file
 
 
-Docker init
------------
-
-`docker init` is a Docker CLI command that helps prepare an application
-project for Docker. It interactively examines the project and can generate
-starter Docker files, such as a `Dockerfile`, `.dockerignore`, and a Compose
-file. The files it generates depend on the project and the prompts you select.
-
-Run it from the application project directory:
-
-```text
-docker init
-```
-
-Review and adjust the generated files for your app before using them. For
-example, check the build steps, ports, environment variables, and any
-credentials. `docker init` scaffolds configuration; it does not build the
-image or start the containers.
-
-After reviewing the files, build and start the Compose services with:
-
-```text
-docker compose up --build
-```
-
 Sample Docker Compose file
 --------------------------
 
@@ -364,3 +339,4 @@ Your project structure:
 my-project/
 ├── compose.yaml
 └── .env
+

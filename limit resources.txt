@@ -1,0 +1,15 @@
+Limit container resources
+A container can consume excessive CPU or memory.
+
+Example:
+services:
+  django:
+    build: .
+    mem_limit: 512m
+    cpus: 0.5
+
+
+This limits the container to:
+- 512 MB memory
+- 0.5 CPU cores
+Resource limits help protect the host from resour
